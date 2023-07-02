@@ -22,7 +22,7 @@ fn main() {
     server.listen("localhost:3000");
 }
 
-fn handler(req: Request, mut res: Request) {
+fn handler(req: Request, mut res: Response) {
     println!("got get {:?}", req.query);
     res.status(200).send("hello get request");
 }
