@@ -98,7 +98,7 @@ impl Server {
 
         let mut lines = raw_request.lines();
 
-        let (method, path) = match lines.nth(0) {
+        let (method, original_path) = match lines.nth(0) {
             None => return (Err(400), stream),
             Some(line1) => {
                 let line1_data: Vec<&str> = line1.split_whitespace().collect();
@@ -117,15 +117,15 @@ impl Server {
         };
 
         let mut query = HashMap::new();
-
-        let path = if let Some((original_path, queries)) = path.split_once("?") {
+        
+        let path = if let Some((path, queries)) = original_path.split_once("?") {
             for q in queries.split("&") {
                 if let Some((k, v)) = q.split_once("=") {
                     query.insert(String::from(k), String::from(v));
                 }
             }
-            original_path.to_string()
-        } else { path };
+            path.to_string()
+        } else { original_path.clone() };
 
         let mut headers = HashMap::new();
 
@@ -148,7 +148,7 @@ impl Server {
             String::new()
         };
 
-        let request = Request::new(method, path, query, headers, body);
+        let request = Request::new(method, path, original_path, query, headers, body);
 
         (Ok(request), stream)
     }
@@ -238,6 +238,7 @@ impl Route {
 pub struct Request {
     pub method: Method,
     pub path: String,
+    pub original_path: String,
     pub query: HashMap<String, String>,
     pub headers: HashMap<String, String>,
     pub body: String,
@@ -247,6 +248,7 @@ impl Request {
     pub fn new(
         method: Method,
         path: String,
+        original_path: String,
         query: HashMap<String, String>,
         headers: HashMap<String, String>,
         body: String,
@@ -254,6 +256,7 @@ impl Request {
         Self {
             method,
             path,
+            original_path,
             query,
             headers,
             body,
